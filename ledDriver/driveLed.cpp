@@ -1,42 +1,43 @@
+// driveLed.cpp
 #include <iostream>
 #include <fstream>
-#include <string>
+#include <thread>
+#include <chrono>
 #include <pigpio.h>
 
-const std::string VERSION_FILE = "/home/pi/LEDControlApp/.version";
-const int LED_PIN = 17;  // Modify as per your setup
+const int LED_GPIO = 17;
+const std::string VERSION_FILE = "/usr/myapps/appOta/.version";
 
-// Read version info from file
-std::string getVersion() {
-    std::ifstream file(VERSION_FILE);
-    std::string version;
-    if (file >> version) return version;
-    return "0.0.0";  // Default version if not found
-}
-
-void setupLED() {
-    if (gpioInitialise() < 0) {
-        std::cerr << "GPIO Initialization Failed\n";
-        exit(1);
+int readVersion() {
+    std::ifstream versionFile(VERSION_FILE);
+    int version = 0;
+    if (versionFile.is_open()) {
+        versionFile >> version;
+        versionFile.close();
+    } else {
+        std::cerr << "Failed to read version file\n";
     }
-    gpioSetMode(LED_PIN, PI_OUTPUT);
-}
-
-void blinkLED() {
-    while (true) {
-        gpioWrite(LED_PIN, 1);  // Turn LED on
-        time_sleep(1);
-        gpioWrite(LED_PIN, 0);  // Turn LED off
-        time_sleep(1);
-    }
+    return version;
 }
 
 int main() {
-    std::string version = getVersion();
-    std::cout << "Current version: " << version << "\n";
+    if (gpioInitialise() < 0) {
+        std::cerr << "pigpio init failed\n";
+        return 1;
+    }
 
-    setupLED();
-    blinkLED();
+    gpioSetMode(LED_GPIO, PI_OUTPUT);
 
+    int version = readVersion();
+    std::cout << "Running LED app, version: " << version << std::endl;
+
+    while (true) {
+        gpioWrite(LED_GPIO, 1);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100 * (version+1)));
+        gpioWrite(LED_GPIO, 0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100 * (version+1)));
+    }
+
+    gpioTerminate();
     return 0;
 }
