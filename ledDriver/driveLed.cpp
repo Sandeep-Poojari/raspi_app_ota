@@ -6,7 +6,7 @@
 #include <pigpio.h>
 
 const int LED_GPIO = 17;
-const std::string VERSION_FILE = "/usr/myapps/appOta/.version";
+const std::string VERSION_FILE = "/usr/myapps/appOta/version.txt";
 
 int readVersion() {
     std::ifstream versionFile(VERSION_FILE);
@@ -33,9 +33,9 @@ int main() {
 
     while (true) {
         gpioWrite(LED_GPIO, 1);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100 * (version+1)));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100 * version));
         gpioWrite(LED_GPIO, 0);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100 * (version+1)));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100 * version));
     }
 
     gpioTerminate();
